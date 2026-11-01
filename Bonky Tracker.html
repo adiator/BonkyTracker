@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bonky Tracker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+:root{--page:#1840b0;--bez:#3a96c4;--bezd:#1d5fa8;--ink:#0a1a3d;--scr:#0d1b45;--txt:#cfe6ff;--red:#e24b4b;--grn:#3fae5d;--org:#f08a1e;--yel:#ffcf7a;
+--px:"Press Start 2P",ui-monospace,Menlo,Consolas,monospace;--vt:"VT323",ui-monospace,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0e2468;--bez:#2a7aa6;--bezd:#154a85}}
+:root[data-theme="dark"]{--page:#0e2468;--bez:#2a7aa6;--bezd:#154a85}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--txt);font-family:var(--vt);font-size:20px;min-height:100vh}
+.stage{max-width:1040px;margin:0 auto;padding:44px 22px 80px 30px}
+.frame{position:relative;background:var(--bez);border:4px solid var(--ink);padding:34px 16px 14px 22px;box-shadow:0 0 0 4px var(--bezd),8px 8px 0 4px var(--ink)}
+.title{position:absolute;left:50%;top:-26px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#102a6e;border:4px solid var(--ink);box-shadow:0 0 0 3px #66c3ff;padding:6px 12px;font:12px var(--px);color:#fff;white-space:nowrap;z-index:3;text-shadow:2px 2px 0 #0a1a3d}
+.title svg{width:30px;height:28px}
+.screen{position:relative;border:4px solid var(--ink);background:var(--scr);aspect-ratio:100/74;overflow:hidden}
+#map{width:100%;height:100%;display:block;image-rendering:pixelated}
+.ruler{position:absolute;left:0;right:0;top:0;height:22px;pointer-events:none;opacity:.55;background:repeating-linear-gradient(90deg,#8fb8e8 0 2px,transparent 2px 10px) bottom/100% 8px no-repeat,repeating-linear-gradient(90deg,#8fb8e8 0 2px,transparent 2px 50px) bottom/100% 16px no-repeat}
+.grid{fill:none;stroke:#18306e;stroke-width:.25}
+.road{stroke:#2f5aa8;stroke-width:1.2;stroke-dasharray:2 1.4;fill:none}
+.lb{font:4px var(--vt);fill:var(--txt);text-anchor:middle}
+.pc{font:3.4px var(--vt);fill:#7fa6d8;text-anchor:middle}
+.nd{cursor:pointer}
+.dog{animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-1.2px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.radar{position:absolute;right:10px;bottom:10px;width:min(26%,170px);aspect-ratio:1;background:rgba(8,20,60,.7);border-radius:50%}
+.radar svg{width:100%;height:100%}
+.sweep{transform-origin:0 0;animation:spin 4s linear infinite}
+.toast{position:absolute;left:50%;top:26px;transform:translateX(-50%);background:var(--ink);border:3px solid var(--yel);color:var(--yel);font:9px var(--px);padding:8px 10px;white-space:nowrap;display:none;z-index:4}
+.round{position:absolute;width:54px;height:54px;border:4px solid var(--ink);border-radius:14px;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:inset -4px -4px 0 rgba(0,0,0,.25),inset 4px 4px 0 rgba(255,255,255,.3);z-index:3}
+.round svg{width:32px;height:30px}
+.org{background:var(--org);left:-18px;top:-14px}
+.wht{background:#fff;right:-14px;top:-14px}
+.grn{background:var(--grn);left:-24px;top:28%}
+.red{background:var(--red);left:-24px;top:calc(28% + 62px)}
+.bar{display:flex;gap:10px;margin-top:14px;align-items:center}
+.ticker{flex:1;height:50px;overflow:hidden;background:#12141f;border:4px solid var(--ink);box-shadow:inset 0 0 0 3px #3a3f55;display:flex;align-items:center}
+.ticker span{display:inline-block;white-space:nowrap;font:11px var(--px);color:#d9e8ff;animation:scroll 22s linear infinite;padding-left:0}
+.snd{position:static;background:var(--grn);color:#fff;font:16px var(--px);width:56px;height:46px}
+.yel{position:absolute;bottom:-34px;background:var(--yel);border:3px solid var(--ink);box-shadow:0 4px 0 #d38a2a;color:var(--ink);font:11px var(--px);padding:11px 14px;cursor:pointer;z-index:3}
+.yl{left:70px}.yr{right:10px}
+.mascot{position:absolute;left:-14px;bottom:-56px;width:70px;z-index:4}
+.mascot svg{width:100%;display:block}
+.ov{position:fixed;inset:0;background:rgba(5,10,30,.75);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.ov.on{display:flex}
+.panel{width:min(440px,100%);max-height:80vh;overflow:auto;background:var(--scr);border:4px solid var(--bez);box-shadow:0 0 0 4px var(--ink);padding:16px;font-size:22px}
+.panel h2{font:11px var(--px);color:var(--yel);margin:0 0 12px}
+.panel select,.panel input{width:100%;padding:8px;margin:4px 0 10px;background:#102a6e;color:#fff;border:3px solid var(--bez);font:inherit}
+.panel button{font:10px var(--px);border:3px solid var(--ink);padding:10px;cursor:pointer;color:#fff;background:var(--grn);margin-right:6px}
+.panel button.n{background:var(--red)}.panel button.x{background:#555;float:right;margin:0}
+.prow{display:grid;grid-template-columns:110px 1fr 44px;gap:8px;align-items:center}
+.pb{height:10px;background:#18306e}.pb i{display:block;height:100%;background:var(--red)}
+.fd{display:flex;justify-content:space-between;border-bottom:2px solid #18306e;padding:3px 0}.fd small{font-size:18px;color:#7fa6d8}
+.hint{font-size:17px;color:#7fa6d8}
+@media(max-width:560px){.title{font-size:9px}.yel{font-size:8px;padding:9px}.yl{left:62px}.ticker span{font-size:9px}.stage{padding-left:34px}}
+@media(prefers-reduced-motion:reduce){.dog,.sweep,.ticker span{animation:none}}
+</style>
+</head>
+<body>
+<div class="stage"><div class="frame">
+  <div class="title" id="logo"></div>
+  <button class="round org" id="bMenu" aria-label="Top spots"><svg viewBox="0 0 10 8" shape-rendering="crispEdges"><path fill="#0a1a3d" d="M0 0h10v2H0zM0 3h10v2H0zM0 6h10v2H0z"/></svg></button>
+  <button class="round wht" id="bFeed" aria-label="Recent sightings"></button>
+  <button class="round grn" id="bYes" aria-label="Saw Bonky at selected spot"></button>
+  <button class="round red" id="bNo" aria-label="Bonky not at selected spot"></button>
+  <div class="screen">
+    <svg id="map" viewBox="0 0 100 74" role="img" aria-label="Campus map of where Bonky probably is"></svg>
+    <div class="ruler"></div><div class="toast" id="toast"></div>
+    <div class="radar"><svg viewBox="-50 -50 100 100" id="radar"></svg></div>
+  </div>
+  <div class="bar"><div class="ticker"><span id="tick"></span></div><button class="round snd" id="bSnd" aria-label="Toggle sound">♪</button></div>
+  <div class="mascot" id="mascot"></div>
+  <button class="yel yl" id="bRep">REPORT SIGHTING</button>
+  <button class="yel yr" id="bTop">TOP SPOTS</button>
+</div></div>
+<div class="ov" id="ov"><div class="panel" id="panel"></div></div>
+
+<script>
+// ---- Edit LOCS to match your campus (x,y on a 100x74 canvas) ----
+const LOCS=[
+ {id:"h1",name:"Hostel 1",x:12,y:12},{id:"h2",name:"Hostel 2",x:36,y:12},{id:"audi",name:"Audi",x:60,y:12},{id:"a1",name:"A1",x:85,y:12},
+ {id:"mess",name:"Mess",x:12,y:29},{id:"library",name:"Library",x:36,y:29},{id:"a2",name:"A2",x:60,y:29},{id:"a3",name:"A3",x:85,y:29},
+ {id:"tuck",name:"Tuck",x:12,y:46},{id:"tonnies",name:"Tonnies",x:36,y:46},{id:"football",name:"Football field",x:60,y:46},{id:"bb",name:"BB court",x:85,y:46},
+ {id:"gate",name:"Main Gate",x:48,y:62}
+];
+const ROADS=[["h1","h2"],["h2","audi"],["audi","a1"],["h1","mess"],["h2","library"],["audi","a2"],["a1","a3"],["mess","library"],["library","a2"],["a2","a3"],["mess","tuck"],["library","tonnies"],["a2","football"],["a3","bb"],["tuck","tonnies"],["tonnies","football"],["football","bb"],["tonnies","gate"],["football","gate"]];
+const TAU=25,SPREAD=22,STALE=60,KEY="bonky:sightings:v3";
+
+// ---- pixel art ----
+const PAL={k:"#1a1020",b:"#c97b3c",d:"#7a4420",w:"#fff7ea",n:"#111",t:"#e8576b"};
+const HEAD=[".kk......kk.","kddk....kddk","kddkkkkkkddk","kddkbbbbkddk",".kkbbbbbbkk.",".kbkbbbbkbk.",".kbbbwwbbbk.","..kbwwwwbk..","..kbwnnwbk..","..kbwttwbk..","...kkkkkk..."];
+function px(rows,pal,attrs){let r="";rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c!=="."&&pal[c])r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${pal[c]}"/>`}));return `<svg ${attrs||""} viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges">${r}</svg>`}
+const head=a=>px(HEAD,PAL,a);
+
+const $=s=>document.querySelector(s);
+const L=Object.fromEntries(LOCS.map(l=>[l.id,l]));
+const dist=(a,b)=>Math.hypot(L[a].x-L[b].x,L[a].y-L[b].y);
+const now=()=>Date.now();
+const ago=t=>{const m=Math.max(0,Math.round((now()-t)/6e4));return m<1?"JUST NOW":m<60?m+" MIN AGO":Math.floor(m/60)+"H "+(m%60)+"M AGO"};
+const seed=()=>{const t=now();return[{loc:"mess",t:t-95*6e4,neg:false},{loc:"h2",t:t-10*6e4,neg:false}]};
+function load(){try{const r=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(r))return r}catch(e){}return seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load(),sel=null,sfx=true;
+
+function compute(){
+  const P=Object.fromEntries(LOCS.map(l=>[l.id,0]));
+  const pos=S.filter(s=>!s.neg&&L[s.loc]);
+  if(!pos.length)return{P,last:null};
+  for(const s of pos){
+    const age=(now()-s.t)/6e4,w=Math.exp(-age/45),stay=Math.exp(-age/TAU);
+    const o=LOCS.filter(l=>l.id!==s.loc),k=o.map(x=>Math.exp(-dist(s.loc,x.id)/SPREAD)),ks=k.reduce((a,b)=>a+b,0);
+    P[s.loc]+=w*stay;o.forEach((x,i)=>P[x.id]+=w*(1-stay)*k[i]/ks);
+  }
+  for(const s of S.filter(s=>s.neg&&L[s.loc]))if((now()-s.t)/6e4<30)P[s.loc]*=.2;
+  const tot=Object.values(P).reduce((a,b)=>a+b,0)||1;for(const k in P)P[k]/=tot;
+  return{P,last:pos.reduce((a,b)=>b.t>a.t?b:a)};
+}
+
+function render(){
+  const{P,last}=compute();
+  const rk=LOCS.map(l=>({...l,p:P[l.id]})).sort((a,b)=>b.p-a.p);
+  const stale=!last||(now()-last.t)/6e4>STALE,top=rk[0],cur=L[sel]||top;
+  let g='<defs><pattern id="gp" width="10" height="10" patternUnits="userSpaceOnUse"><path class="grid" d="M10 0H0V10"/></pattern></defs><rect width="100" height="74" fill="url(#gp)"/>';
+  g+=ROADS.map(([a,b])=>`<line class="road" x1="${L[a].x}" y1="${L[a].y}" x2="${L[b].x}" y2="${L[b].y}"/>`).join("");
+  for(const l of rk){
+    const s=2.2+l.p*7,isTop=!stale&&l.id===top.id,fill=isTop?"#e24b4b":"#3a7bd5";
+    g+=`<g class="nd" data-id="${l.id}"><rect x="${l.x-s}" y="${l.y-s}" width="${2*s}" height="${2*s}" fill="${fill}" fill-opacity=".45" stroke="${fill}" stroke-width=".8"/>`
+     +(l.id===cur.id?`<rect x="${l.x-s-1.5}" y="${l.y-s-1.5}" width="${2*s+3}" height="${2*s+3}" fill="none" stroke="#ffcf7a" stroke-width=".7" stroke-dasharray="1.5 1"/>`:"")
+     +`<text class="lb" x="${l.x}" y="${l.y+s+4.2}">${l.name}</text><text class="pc" x="${l.x}" y="${l.y+s+7.4}">${Math.round(l.p*100)}%</text>`
+     +(isTop?head(`class="dog" x="${l.x-4}" y="${l.y-3.6}" width="8" height="7.4"`):"")+`</g>`;
+  }
+  $("#map").innerHTML=g;
+  // radar centred on the most likely spot
+  let r="";for(const m of [12,24,36,48]){r+=`<polygon fill="none" stroke="#3a7bd5" stroke-width=".6" points="${[...Array(12)].map((_,i)=>(m*Math.sin(i*Math.PI/6)).toFixed(1)+","+(-m*Math.cos(i*Math.PI/6)).toFixed(1)).join(" ")}"/>`}
+  for(let i=0;i<12;i++)r+=`<line stroke="#3a7bd5" stroke-width=".4" x1="0" y1="0" x2="${(48*Math.sin(i*Math.PI/6)).toFixed(1)}" y2="${(-48*Math.cos(i*Math.PI/6)).toFixed(1)}"/>`;
+  r+='<g class="sweep"><line x1="0" y1="0" x2="0" y2="-48" stroke="#66e0ff" stroke-width="1.2"/></g>';
+  for(const l of rk){if(l.id===cur.id)continue;let dx=(l.x-cur.x)*.6,dy=(l.y-cur.y)*.6;const d=Math.hypot(dx,dy);if(d>44){dx*=44/d;dy*=44/d}const z=1.6+l.p*9;r+=`<rect x="${dx-z/2}" y="${dy-z/2}" width="${z}" height="${z}" fill="#ff7a7a" fill-opacity=".85"/>`}
+  r+=head('x="-5" y="-4.6" width="10" height="9.2"');
+  $("#radar").innerHTML=r;
+  const txt=last?(stale?`BONKY LOCATION UNKNOWN  ///  LAST SEEN: ${L[last.loc].name.toUpperCase()} ${ago(last.t)}`:`LAST SEEN: ${L[last.loc].name.toUpperCase()} ${ago(last.t)}`):"NO SIGHTINGS YET";
+  const t=txt+"  ///  TAP A SPOT, THEN HIT GREEN IF YOU SAW BONKY  ///  ";
+  $("#tick").textContent=t+t;
+  window._rk=rk;
+}
+
+function toast(m){const e=$("#toast");e.textContent=m;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2200)}
+function beep(){if(!sfx)return;try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.type="square";o.frequency.value=660;g.gain.value=.05;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.09)}catch(e){}}
+function add(loc,neg,min){S.push({loc,t:now()-(min||0)*6e4,neg});save();render();beep();toast((neg?"NOT AT ":"BONKY SPOTTED: ")+L[loc].name.toUpperCase())}
+const curId=()=>(L[sel]||window._rk[0]).id;
+function openP(h){$("#panel").innerHTML=h+'<button class="x" id="cl">CLOSE</button>';$("#ov").classList.add("on");$("#cl").onclick=()=>$("#ov").classList.remove("on")}
+function topSpots(){openP('<h2>TOP SPOTS</h2>'+window._rk.map(l=>`<div class="prow"><span>${l.name}</span><span class="pb"><i style="width:${Math.round(l.p*100)}%"></i></span><span>${Math.round(l.p*100)}%</span></div>`).join(""))}
+function feed(){openP('<h2>RECENT SIGHTINGS</h2>'+([...S].sort((a,b)=>b.t-a.t).slice(0,25).map(s=>`<div class="fd"><span>${s.neg?"NOT AT":"SEEN AT"} ${L[s.loc]?L[s.loc].name:s.loc}</span><small>${ago(s.t)}</small></div>`).join("")||"Nothing yet")+'<p class="hint"><button id="rs" style="background:#555">RESET DEMO</button></p>');$("#rs").onclick=()=>{S=seed();save();render();feed()}}
+function report(){openP('<h2>REPORT SIGHTING</h2><label>Where?<select id="rl">'+LOCS.map(l=>`<option value="${l.id}"${l.id===curId()?" selected":""}>${l.name}</option>`).join("")+'</select></label><label>Minutes ago (0 = now)<input id="rm" type="number" min="0" max="120" value="0"></label><button id="ry">SAW HIM</button><button class="n" id="rn">NOT HERE</button>');
+  const go=n=>{add($("#rl").value,n,Math.min(120,Math.max(0,parseInt($("#rm").value)||0)));$("#ov").classList.remove("on")};$("#ry").onclick=()=>go(false);$("#rn").onclick=()=>go(true)}
+
+$("#logo").innerHTML=head()+"BONKY TRACKER";
+["#bFeed","#bYes","#bNo"].forEach(s=>$(s).innerHTML=head());
+$("#mascot").innerHTML=head();
+$("#map").addEventListener("click",e=>{const n=e.target.closest(".nd");if(n){sel=n.dataset.id;render();toast("SELECTED: "+L[sel].name.toUpperCase())}});
+$("#bYes").onclick=()=>add(curId(),false,0);$("#bNo").onclick=()=>add(curId(),true,0);
+$("#bMenu").onclick=topSpots;$("#bTop").onclick=topSpots;$("#bFeed").onclick=feed;$("#bRep").onclick=report;
+$("#bSnd").onclick=()=>{sfx=!sfx;$("#bSnd").textContent=sfx?"♪":"×"};
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov")$("#ov").classList.remove("on")});
+render();setInterval(render,30000);
+</script>
+</body>
+</html>
